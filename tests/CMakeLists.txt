@@ -88,6 +88,8 @@ set(COMMON_CPP
     positive/command.cpp
     positive/descriptors.cpp
     positive/dynamic_rendering.cpp
+    positive/exhaustive_shader.cpp
+    ${SPIRV_REFLECT_INCLUDE_DIR}/spirv_reflect.cpp
     positive/image_buffer.cpp
     positive/instance.cpp
     positive/other.cpp
@@ -125,6 +127,7 @@ target_include_directories(vk_layer_validation_tests
                                   ${PROJECT_SOURCE_DIR}/layers
                                   ${PROJECT_SOURCE_DIR}/layers/generated
                                   ${GLSLANG_INCLUDE_DIR}
+                                  ${SPIRV_REFLECT_INCLUDE_DIR}
                                   ${CMAKE_CURRENT_BINARY_DIR}
                                   ${CMAKE_BINARY_DIR}
                                   ${PROJECT_BINARY_DIR}

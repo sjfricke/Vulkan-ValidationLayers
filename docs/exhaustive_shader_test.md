@@ -17,3 +17,9 @@ After being fed a SPIR-V module the following occurs:
 ## Why not use Amber
 
 Google has an amazing tool called [amber](https://github.com/google/amber) that does something similar. The main difference is for the Exhaustive Shader test, the only input is the SPIR-V module and the goal is to not crash. Amber takes in more details and goal is to make sure the correct output in produced when ran. The Exhaustive Shader Test doesn't actually plan to execute the shader, it just attempts to validate it at compile time (ex. `vkCreateGraphicsPipelines`, `vkCreateComputePipelines`, etc).
+
+## How to use
+
+This test is ran just like the other tests, but with the `--shader-path` to set the path of a binary to be loaded.
+
+`./tests/vk_layer_validation_tests --devsim --gtest_filter=VkExhaustiveShaderTest* --shader-path /path/to/shader.spv`

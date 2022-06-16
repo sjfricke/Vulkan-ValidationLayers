@@ -2092,6 +2092,15 @@ VkResult VkShaderObj::InitFromASMTry() {
     return result;
 }
 
+VkResult VkShaderObj::InitFromBinary(const std::vector<uint32_t> &spirv) {
+    VkShaderModuleCreateInfo moduleCreateInfo = LvlInitStruct<VkShaderModuleCreateInfo>();
+    moduleCreateInfo.codeSize = spirv.size() * sizeof(uint32_t);
+    moduleCreateInfo.pCode = spirv.data();
+    const auto result = init_try(m_device, moduleCreateInfo);
+    m_stage_info.module = handle();
+    return result;
+}
+
 // static
 std::unique_ptr<VkShaderObj> VkShaderObj::CreateFromGLSL(VkRenderFramework &framework, VkShaderStageFlagBits stage,
                                                          const std::string &code, const char *entry_point,

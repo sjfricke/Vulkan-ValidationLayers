@@ -531,11 +531,12 @@ class GoodRepo(object):
             self.CustomBuild(repo_dict)
             return
 
-        # Build and execute CMake command for creating build files
-        self.CMakeConfig(repos)
+        if self.build_dir:
+            # Build and execute CMake command for creating build files
+            self.CMakeConfig(repos)
 
-        # Build and execute CMake command for the build
-        self.CMakeBuild()
+            # Build and execute CMake command for the build
+            self.CMakeBuild()
 
     def IsOptional(self, opts):
         if len(self.optional.intersection(opts)) > 0: return True

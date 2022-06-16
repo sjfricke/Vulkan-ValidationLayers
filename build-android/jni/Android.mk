@@ -111,6 +111,7 @@ LOCAL_SRC_FILES += $(SRC_DIR)/tests/layer_validation_tests.cpp \
                    $(SRC_DIR)/tests/vklayertests_graphics_library.cpp \
                    $(SRC_DIR)/tests/positive/command.cpp \
                    $(SRC_DIR)/tests/positive/descriptors.cpp \
+                   $(SRC_DIR)/tests/positive/exhaustive_shader.cpp \
                    $(SRC_DIR)/tests/positive/image_buffer.cpp \
                    $(SRC_DIR)/tests/positive/instance.cpp \
                    $(SRC_DIR)/tests/positive/other.cpp \
@@ -159,6 +160,7 @@ LOCAL_SRC_FILES += $(SRC_DIR)/tests/layer_validation_tests.cpp \
                    $(SRC_DIR)/tests/vklayertests_graphics_library.cpp \
                    $(SRC_DIR)/tests/positive/command.cpp \
                    $(SRC_DIR)/tests/positive/descriptors.cpp \
+                   $(SRC_DIR)/tests/positive/exhaustive_shader.cpp \
                    $(SRC_DIR)/tests/positive/image_buffer.cpp \
                    $(SRC_DIR)/tests/positive/instance.cpp \
                    $(SRC_DIR)/tests/positive/other.cpp \

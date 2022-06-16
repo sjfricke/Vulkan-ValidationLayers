@@ -151,12 +151,21 @@ OR set the Vulkan-ValidationLayers CMake option `USE_ROBIN_HOOD_HASHING` to `OFF
 
 #### glslang
 
-The validation layer tests depend on the
+The **validation layer tests** depend on the
 [glslang repository](https://github.com/KhronosGroup/glslang).
 You must clone the glslang repository
 and build its `install` target. Follow the build instructions in the glslang
 [README.md](https://github.com/KhronosGroup/glslang/blob/master/README.md)
 file. You must also take note of the glslang install directory
+and pass it on the CMake command line for building this repository, as
+described below.
+
+#### SPIRV-Reflect
+
+The **validation layer tests** depend on the
+[SPIRV-Reflect repository](https://github.com/KhronosGroup/SPIRV-Reflect).
+You must clone the SPIRV-Reflect repository.
+You must also take note of the SPIRV-Reflect cloned directory
 and pass it on the CMake command line for building this repository, as
 described below.
 
@@ -351,6 +360,7 @@ work with the solution interactively.
                  -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
                  -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
                  -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+                 -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
                  ..
     cmake --build .
 
@@ -374,6 +384,7 @@ create a build directory and generate the Visual Studio project files:
                  -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
                  -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir
                  -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+                 -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
                  ..
 
 > Note: The `..` parameter tells `cmake` the location of the top of the
@@ -459,6 +470,7 @@ location of the loader's install directory:
                  -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
                  -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
                  -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+                 -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
                  ..
 
 ### Windows Tests and Demos
@@ -537,6 +549,7 @@ CMake with the `--build` option or `make` to build from the command line.
           -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
           -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
           -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+          -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
           ..
     make
 
@@ -556,6 +569,7 @@ create a build directory and generate the make files.
           -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
           -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
           -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+          -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
           -DCMAKE_INSTALL_PREFIX=install ..
 
 > Note: The `..` parameter tells `cmake` the location of the top of the
@@ -892,6 +906,7 @@ build is:
           -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
           -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
           -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+          -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
           -DCMAKE_BUILD_TYPE=Debug ..
     make
 
@@ -911,6 +926,7 @@ To create and open an Xcode project:
           -DSPIRV_HEADERS_INSTALL_DIR=absolute_path_to_install_dir \
           -DSPIRV_TOOLS_INSTALL_DIR=absolute_path_to_install_dir \
           -DROBIN_HOOD_HASHING_INSTALL_DIR=absolute_path_to_install_dir \
+          -DSPIRV_REFLECT_INSTALL_DIR=absolute_path_to_install_dir \
           -GXcode ..
     open VULKAN.xcodeproj
 

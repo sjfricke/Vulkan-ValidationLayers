@@ -42,6 +42,12 @@
       "sub_dir": "robin-hood-hashing",
       "build_step": "skip",
       "commit": "3.11.5"
+    },
+    {
+      "name" : "SPIRV-Reflect",
+      "url" : "https://github.com/KhronosGroup/SPIRV-Reflect.git",
+      "sub_dir" : "SPIRV-Reflect",
+      "commit" : "1ef99b09fa7ce5aee2c5cf70c61a4f7458d27e09"
     }
   ]
 }

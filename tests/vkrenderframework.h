@@ -672,6 +672,7 @@ typedef enum {
     // TRY == Won't try in contructor as need to be called as function that can return the VkResult
     SPV_SOURCE_GLSL_TRY,
     SPV_SOURCE_ASM_TRY,
+    SPV_SOURCE_BINARY,
 } SpvSourceType;
 
 class VkShaderObj : public vk_testing::ShaderModule {
@@ -686,6 +687,7 @@ class VkShaderObj : public vk_testing::ShaderModule {
     VkResult InitFromGLSLTry(bool debug = false, const VkDeviceObj *custom_device = nullptr);
     bool InitFromASM();
     VkResult InitFromASMTry();
+    VkResult InitFromBinary(const std::vector<uint32_t> &spirv);
 
     // These functions return a pointer to a newly created _and initialized_ VkShaderObj if initialization was successful.
     // Otherwise, {} is returned.

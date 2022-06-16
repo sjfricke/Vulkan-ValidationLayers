@@ -133,6 +133,7 @@ bool VkTestFramework::m_devsim_layer = false;
 int VkTestFramework::m_width = 0;
 int VkTestFramework::m_height = 0;
 int VkTestFramework::m_phys_device_index = -1;
+std::string VkTestFramework::m_shader_path = "";
 
 bool VkTestFramework::optionMatch(const char *option, char *optionLine) {
     if (strncmp(option, optionLine, strlen(option)) == 0)
@@ -153,6 +154,8 @@ void VkTestFramework::InitArgs(int *argc, char *argv[]) {
             m_devsim_layer = true;
         else if (optionMatch("--device-index", argv[i]) && ((i + 1) < *argc)) {
             m_phys_device_index = std::atoi(argv[++i]);
+        } else if (optionMatch("--shader-path", argv[i]) && ((i + 1) < *argc)) {
+            m_shader_path = std::string(argv[++i]);
         } else if (optionMatch("--help", argv[i]) || optionMatch("-h", argv[i])) {
             printf("\nOther options:\n");
             printf(
@@ -184,6 +187,9 @@ void VkTestFramework::InitArgs(int *argc, char *argv[]) {
                 "\t\tIndex into VkPhysicalDevice array returned from vkEnumeratePhysicalDevices.\n"
                 "\t\tThe default behavior is to automatically choose \"the most reasonable device.\"\n"
                 "\t\tAn invalid index (i.e., outside the range [0, *pPhysicalDeviceCount)) will result in the default behavior\n");
+            printf(
+                "\t--shader-path <SPIRV shader module binary>\n"
+                "\t\tOnly valid when running VkExhaustiveShaderTest tests\n");
             exit(0);
         } else {
             printf("\nUnrecognized option: %s\n", argv[i]);

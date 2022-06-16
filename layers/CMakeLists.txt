@@ -300,7 +300,6 @@ if(BUILD_LAYERS)
     endif()
 
     # Khronos validation additional dependencies
-    target_include_directories(VkLayer_khronos_validation PRIVATE ${GLSLANG_INCLUDE_DIR})
     if(INSTRUMENT_OPTICK)
         target_include_directories(VkLayer_khronos_validation PRIVATE ${OPTICK_SOURCE_DIR})
     endif()

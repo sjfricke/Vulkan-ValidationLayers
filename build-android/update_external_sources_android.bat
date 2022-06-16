@@ -56,7 +56,7 @@ if %ERRORLEVEL% equ 1 (
 
 if %errorCode% neq 0 (goto:error)
 
-echo Creating and/or updating glslang, spirv-tools, spirv-headers, shaderc, vulkan-headers, vulkan-tools in %BASE_DIR%
+echo Creating and/or updating glslang, spirv-tools, spirv-headers, shaderc, vulkan-headers, vulkan-tools, spirv-reflect in %BASE_DIR%
 
 set build-shaderc=1
 

@@ -42,6 +42,7 @@ class VkTestFramework : public ::testing::Test {
     bool ASMtoSPV(const spv_target_env target_env, const uint32_t options, const char *pasm, std::vector<uint32_t> &spv);
     static bool m_devsim_layer;
     static int m_phys_device_index;
+    static std::string m_shader_path;
     static ANativeWindow *window;
 };
 

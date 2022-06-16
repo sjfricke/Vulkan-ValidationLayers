@@ -326,6 +326,17 @@ if(BUILD_TESTS)
         set(GLSLANG_INCLUDE_DIR "${glslang_SOURCE_DIR}" CACHE PATH "Path to glslang headers")
         set(GLSLANG_LIBRARIES glslang SPIRV SPVRemapper)
     endif()
+
+    set(SPIRV_REFLECT_INSTALL_DIR "SPIRV-REFLECT-NOTFOUND" CACHE PATH "Absolute path to a SPIRV-Reflect directory")
+    if(NOT SPIRV_REFLECT_INSTALL_DIR AND NOT DEFINED ENV{SPIRV_REFLECT_INSTALL_DIR})
+        message(FATAL_ERROR "Must define location of SPIRV-Reflect repo -- see BUILD.md")
+    endif()
+
+    # CMake command line option overrides environment variable
+    if(NOT SPIRV_REFLECT_INSTALL_DIR)
+        set(SPIRV_REFLECT_INSTALL_DIR $ENV{SPIRV_REFLECT_INSTALL_DIR})
+    endif()
+    set(SPIRV_REFLECT_INCLUDE_DIR ${SPIRV_REFLECT_INSTALL_DIR})
 endif()
 
 # Generate dependent helper files ------------------------------------------------------------------------------------------------
