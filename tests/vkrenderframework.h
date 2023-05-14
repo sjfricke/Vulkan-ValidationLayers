@@ -370,12 +370,14 @@ class VkCommandBufferObj : public vk_testing::CommandBuffer {
     void BindDescriptorSet(VkDescriptorSetObj &descriptorSet);
     void BindIndexBuffer(VkBufferObj *indexBuffer, VkDeviceSize offset, VkIndexType indexType);
     void BindVertexBuffer(VkConstantBufferObj *vertexBuffer, VkDeviceSize offset, uint32_t binding);
+    void BindPipeline(VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline);
     void BeginRenderPass(const VkRenderPassBeginInfo &info);
     void EndRenderPass();
     void FillBuffer(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize fill_size, uint32_t data);
     void Draw(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance);
     void DrawIndexed(uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset,
                      uint32_t firstInstance);
+    void Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ);
     void QueueCommandBuffer(bool checkSuccess = true);
     void QueueCommandBuffer(const VkFenceObj &fence, bool checkSuccess = true);
     void SetViewport(uint32_t firstViewport, uint32_t viewportCount, const VkViewport *pViewports);

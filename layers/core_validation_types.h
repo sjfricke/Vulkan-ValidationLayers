@@ -1379,6 +1379,8 @@ struct CMD_BUFFER_STATE : public BASE_NODE {
     // Cache of current insert label...
     LoggingLabel debug_label;
 
+    // Push constants push command buffers are per shader stage, not bindpoint, it is possible to have multi-entry point shaders
+    // where the vertex and fragment are different
     std::vector<uint8_t> push_constant_data;
     PushConstantRangesId push_constant_data_ranges;
 

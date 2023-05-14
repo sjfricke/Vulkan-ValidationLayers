@@ -9925,6 +9925,145 @@ TEST_F(VkPositiveLayerTest, PushConstantsStaticallyUnused) {
     m_errorMonitor->VerifyNotFound();
 }
 
+TEST_F(VkPositiveLayerTest, PushConstantsComputePushGraphicsEmpty) {
+    TEST_DESCRIPTION("Test cases to replicate issues from #2689 where mixing push and graphics causes an issue");
+    ASSERT_NO_FATAL_FAILURE(InitFramework(m_errorMonitor));
+    ASSERT_NO_FATAL_FAILURE(InitState(nullptr, nullptr, VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT));
+    ASSERT_NO_FATAL_FAILURE(InitViewport());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+    m_errorMonitor->ExpectSuccess();
+
+    // Need output for compute shader so it does not optimize the push constant use away
+    const float ssbo_data = 0.0f;
+    VkConstantBufferObj ssbo(m_device, sizeof(ssbo_data), (const void *)&ssbo_data, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT);
+    OneOffDescriptorSet descriptor_set(m_device, {
+                                                     {0, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1, VK_SHADER_STAGE_COMPUTE_BIT, nullptr},
+                                                 });
+    descriptor_set.WriteDescriptorBufferInfo(0, ssbo.handle(), 0, VK_WHOLE_SIZE ,VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptor_set.UpdateDescriptorSets();
+
+    // Create set of Pipeline Layouts that cover variations of ranges
+    const float push_data[2] = {0.0f, 0.0f};
+    VkPushConstantRange push_constant_range = {VK_SHADER_STAGE_COMPUTE_BIT, 0, 4};
+
+    // "break" Pipeline Layout Compatibility but are never used. Only to try throw off layer state tracking
+    VkPushConstantRange bad_compute_range = {VK_SHADER_STAGE_COMPUTE_BIT, 0, 8};
+    VkPushConstantRange bad_graphics_range = {VK_SHADER_STAGE_VERTEX_BIT, 0, 8};
+    VkPipelineLayoutObj bad_compute_layout(m_device, {}, {bad_compute_range});
+    VkPipelineLayoutObj bad_graphics_layout(m_device, {}, {bad_graphics_range});
+
+    char const *csSource =
+        "#version 450\n"
+        "layout(push_constant, std430) uniform foo { float x; } consts;\n"
+        "layout(set=0, binding=0) buffer block { float x; } ssbo;\n"
+        "void main(){\n"
+        "   ssbo.x = consts.x;\n"
+        "}\n";
+
+    CreateComputePipelineHelper c_pipe(*this);
+    c_pipe.InitInfo();
+    c_pipe.cs_.reset(new VkShaderObj(m_device, csSource, VK_SHADER_STAGE_COMPUTE_BIT, this));
+    c_pipe.InitState();
+    c_pipe.pipeline_layout_ = VkPipelineLayoutObj(m_device, {&descriptor_set.layout_}, {push_constant_range});
+    c_pipe.CreateComputePipeline();
+
+    // normal graphics pipeline not using push constants
+    CreatePipelineHelper g_pipe(*this);
+    g_pipe.InitInfo();
+    g_pipe.InitState();
+    g_pipe.CreateGraphicsPipeline();
+
+    const float vbo_data[3] = {1.f, 0.f, 1.f};
+    VkConstantBufferObj vbo(m_device, sizeof(vbo_data), (const void *)&vbo_data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
+    // Dispatch -> Draw
+    {
+        m_commandBuffer->begin();
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_);
+        vk::CmdBindDescriptorSets(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_layout_.handle(), 0, 1, &descriptor_set.set_, 0, nullptr);
+        vk::CmdPushConstants(m_commandBuffer->handle(), c_pipe.pipeline_layout_.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, push_data);
+        m_commandBuffer->Dispatch(1, 1, 1);
+
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, g_pipe.pipeline_);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+        m_commandBuffer->end();
+    }
+
+    // Draw -> Dispatch -> Draw
+    {
+        m_commandBuffer->begin();
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, g_pipe.pipeline_);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_);
+        vk::CmdBindDescriptorSets(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_layout_.handle(), 0, 1, &descriptor_set.set_, 0, nullptr);
+        vk::CmdPushConstants(m_commandBuffer->handle(), c_pipe.pipeline_layout_.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, push_data);
+        m_commandBuffer->Dispatch(1, 1, 1);
+
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+        m_commandBuffer->end();
+    }
+
+    // bad compute layouts -> Draw -> bad graphics layouts -> Dispatch
+    {
+        m_commandBuffer->begin();
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, g_pipe.pipeline_);
+        // Should not matter for the draw
+        vk::CmdPushConstants(m_commandBuffer->handle(), bad_compute_layout.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, push_data);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_);
+        vk::CmdBindDescriptorSets(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_layout_.handle(), 0, 1, &descriptor_set.set_, 0, nullptr);
+        vk::CmdPushConstants(m_commandBuffer->handle(), c_pipe.pipeline_layout_.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, push_data);
+        // Should not matter for the dispatch
+        vk::CmdPushConstants(m_commandBuffer->handle(), bad_graphics_layout.handle(), VK_SHADER_STAGE_VERTEX_BIT, 0, 8, push_data);
+        m_commandBuffer->Dispatch(1, 1, 1); // uses push constants
+        m_commandBuffer->end();
+    }
+
+    // Dispatch -> Draw -> bad compute layouts -> Draw -> bad graphics layouts -> Dispatch
+    {
+        m_commandBuffer->begin();
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_);
+        vk::CmdBindDescriptorSets(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_COMPUTE, c_pipe.pipeline_layout_.handle(), 0, 1, &descriptor_set.set_, 0, nullptr);
+        vk::CmdPushConstants(m_commandBuffer->handle(), c_pipe.pipeline_layout_.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, push_data);
+        m_commandBuffer->Dispatch(1, 1, 1);
+
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+        m_commandBuffer->BindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, g_pipe.pipeline_);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+
+        m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+        // Should not matter for the draw
+        vk::CmdPushConstants(m_commandBuffer->handle(), bad_compute_layout.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 8, push_data);
+        m_commandBuffer->Draw(1, 0, 0, 0);
+        m_commandBuffer->EndRenderPass();
+
+        // Should not matter for the dispatch
+        vk::CmdPushConstants(m_commandBuffer->handle(), bad_graphics_layout.handle(), VK_SHADER_STAGE_VERTEX_BIT, 0, 8, push_data);
+        // should still be valid
+        vk::CmdPushConstants(m_commandBuffer->handle(), c_pipe.pipeline_layout_.handle(), VK_SHADER_STAGE_COMPUTE_BIT, 0, 4, push_data);
+        m_commandBuffer->Dispatch(1, 1, 1); // uses push constants
+        m_commandBuffer->end();
+    }
+
+    m_errorMonitor->VerifyNotFound();
+}
+
 TEST_F(VkPositiveLayerTest, CreatePipelineSpecializeInt8) {
     TEST_DESCRIPTION("Test int8 specialization.");
 

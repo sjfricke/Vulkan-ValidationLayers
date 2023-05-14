@@ -2180,6 +2180,10 @@ void VkCommandBufferObj::Draw(uint32_t vertexCount, uint32_t instanceCount, uint
     vk::CmdDraw(handle(), vertexCount, instanceCount, firstVertex, firstInstance);
 }
 
+void VkCommandBufferObj::Dispatch(uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) {
+    vk::CmdDispatch(handle(), groupCountX, groupCountY, groupCountZ);
+}
+
 void VkCommandBufferObj::QueueCommandBuffer(bool checkSuccess) {
     VkFenceObj nullFence;
     QueueCommandBuffer(nullFence, checkSuccess);
@@ -2219,6 +2223,10 @@ void VkCommandBufferObj::BindIndexBuffer(VkBufferObj *indexBuffer, VkDeviceSize 
 
 void VkCommandBufferObj::BindVertexBuffer(VkConstantBufferObj *vertexBuffer, VkDeviceSize offset, uint32_t binding) {
     vk::CmdBindVertexBuffers(handle(), binding, 1, &vertexBuffer->handle(), &offset);
+}
+
+void VkCommandBufferObj::BindPipeline(VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) {
+    vk::CmdBindPipeline(handle(), pipelineBindPoint, pipeline);
 }
 
 VkCommandPoolObj::VkCommandPoolObj(VkDeviceObj *device, uint32_t queue_family_index, VkCommandPoolCreateFlags flags) {
