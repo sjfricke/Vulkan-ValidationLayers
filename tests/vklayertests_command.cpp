@@ -596,6 +596,161 @@ TEST_F(VkLayerTest, InvalidPushConstants) {
     m_commandBuffer->end();
 }
 
+TEST_F(VkLayerTest, PushConstantsCompatibility) {
+    ASSERT_NO_FATAL_FAILURE(Init());
+    ASSERT_NO_FATAL_FAILURE(InitViewport());
+    ASSERT_NO_FATAL_FAILURE(InitRenderTarget());
+
+    char const *const vsSource =
+        "#version 450\n"
+        "\n"
+        "layout(push_constant, std430) uniform foo { float x[8]; } constants;\n"
+        "void main(){\n"
+        "   gl_Position = vec4(constants.x[0]);\n"
+        "}\n";
+
+    char const *const fsSource =
+        "#version 450\n"
+        "\n"
+        "layout(push_constant, std430) uniform foo { float x[4]; } constants;\n"
+        "void main(){\n"
+        "}\n";
+
+    char const *const csSource =
+        "#version 450\n"
+        "\n"
+        "layout(push_constant, std430) uniform foo { float x[4]; } constants;\n"
+        "void main(){\n"
+        "}\n";
+
+    VkShaderObj const vs(m_device, vsSource, VK_SHADER_STAGE_VERTEX_BIT, this);
+    VkShaderObj const fs(m_device, fsSource, VK_SHADER_STAGE_FRAGMENT_BIT, this);
+    VkShaderObj const cs(m_device, csSource, VK_SHADER_STAGE_COMPUTE_BIT, this);
+    const uint32_t range_size = 4; // smaller to allow playing around with offsets
+
+    // Create set of Pipeline Layouts that cover variations of ranges
+    VkPushConstantRange push_constant_range = {};
+    push_constant_range.offset = 0;
+    push_constant_range.size = range_size;
+    VkPipelineLayoutCreateInfo pipeline_layout_info = {VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO, nullptr, 0, 0, nullptr, 1, &push_constant_range};
+
+    // Bind to both stages
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+    CreatePipelineHelper graphics_pipe_both(*this);
+    graphics_pipe_both.InitInfo();
+    graphics_pipe_both.shader_stages_ = {vs.GetStageCreateInfo(), fs.GetStageCreateInfo()};
+    graphics_pipe_both.pipeline_layout_ci_ = pipeline_layout_info;
+    graphics_pipe_both.InitState();
+    graphics_pipe_both.CreateGraphicsPipeline();
+
+    // Only binds to frag
+    push_constant_range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    CreatePipelineHelper graphics_pipe_frag(*this);
+    graphics_pipe_frag.InitInfo();
+    graphics_pipe_frag.shader_stages_ = {vs.GetStageCreateInfo(), fs.GetStageCreateInfo()};
+    graphics_pipe_frag.pipeline_layout_ci_ = pipeline_layout_info;
+    graphics_pipe_frag.InitState();
+    graphics_pipe_frag.CreateGraphicsPipeline();
+
+    // Extra stage
+    push_constant_range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT | VK_SHADER_STAGE_GEOMETRY_BIT;
+    CreatePipelineHelper graphics_pipe_extra(*this);
+    graphics_pipe_extra.InitInfo();
+    graphics_pipe_extra.shader_stages_ = {vs.GetStageCreateInfo(), fs.GetStageCreateInfo()};
+    graphics_pipe_extra.pipeline_layout_ci_ = pipeline_layout_info;
+    graphics_pipe_extra.InitState();
+    graphics_pipe_extra.CreateGraphicsPipeline();
+
+    // Different offset layout
+    push_constant_range.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+    push_constant_range.offset = 4;
+    push_constant_range.size = range_size;
+    VkPipelineLayout graphics_layout_offset;
+    vk::CreatePipelineLayout(m_device->handle(), &pipeline_layout_info, nullptr, &graphics_layout_offset);
+
+    // Different size layout
+    push_constant_range.offset = 0;
+    push_constant_range.size = range_size + 4;
+    VkPipelineLayout graphics_layout_size;
+    vk::CreatePipelineLayout(m_device->handle(), &pipeline_layout_info, nullptr, &graphics_layout_size);
+
+    // Compute
+    push_constant_range.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+    push_constant_range.offset = 0;
+    push_constant_range.size = range_size;
+    VkPipelineLayout compute_layout_base;
+    vk::CreatePipelineLayout(m_device->handle(), &pipeline_layout_info, nullptr, &compute_layout_base);
+
+    // Different offset
+    VkPipelineLayout compute_layout_offset;
+    push_constant_range.offset = 4;
+    vk::CreatePipelineLayout(m_device->handle(), &pipeline_layout_info, nullptr, &compute_layout_offset);
+
+    VkPipeline compute_pipe;
+    VkPipelineShaderStageCreateInfo stage = {VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,nullptr,0 ,VK_SHADER_STAGE_COMPUTE_BIT ,cs.handle() ,"main" ,nullptr};
+    VkComputePipelineCreateInfo pipeline_info = {};
+    pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipeline_info.pNext = nullptr;
+    pipeline_info.flags = 0;
+    pipeline_info.layout = compute_layout_base;
+    pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+    pipeline_info.basePipelineIndex = -1;
+    pipeline_info.stage = stage;
+    vk::CreateComputePipelines(device(), VK_NULL_HANDLE, 1, &pipeline_info, nullptr, &compute_pipe);
+
+    const uint8_t dummy_values[32] = {};
+    const float vbo_data[3] = {1.f, 0.f, 1.f};
+    VkConstantBufferObj vbo(m_device, sizeof(vbo_data), (const void *)&vbo_data, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+
+    m_commandBuffer->begin();
+    m_commandBuffer->BeginRenderPass(m_renderPassBeginInfo);
+    m_commandBuffer->BindVertexBuffer(&vbo, 0, 1);
+
+    // Set pipeline missing vertex stage
+    vk::CmdBindPipeline(m_commandBuffer->handle(), VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipe_frag.pipeline_);
+    vk::CmdPushConstants(m_commandBuffer->handle(), graphics_pipe_frag.pipeline_layout_.handle(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), dummy_values);
+    m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkCmdDraw-None-02698");
+    m_commandBuffer->Draw(1, 0, 0, 0);
+    m_errorMonitor->VerifyFound();
+
+
+    m_errorMonitor->ExpectSuccess();
+    m_commandBuffer->Draw(1, 0, 0, 0);
+    m_errorMonitor->VerifyNotFound();
+
+    // No Vertex stage value set
+
+    // Extra stage
+
+    // Different offset
+
+    // Different size
+
+
+    // vk::CmdPushConstants(m_commandBuffer->handle(), pipe_2.pipeline_layout_.handle(), VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(float), dummy_values);
+    // m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkCmdDraw-None-02698");
+    // m_commandBuffer->Draw(1, 0, 0, 0);
+    // m_errorMonitor->VerifyFound();
+
+    m_commandBuffer->EndRenderPass();
+
+    // Tests Compupte pipeline
+
+    // No Compute stage value set
+
+    // Valid usage
+
+    // Binding graphics pipeline bind point should not make invalid
+
+    m_commandBuffer->end();
+
+    vk::DestroyPipeline(m_device->handle(), compute_pipe, nullptr);
+    vk::DestroyPipelineLayout(m_device->handle(), graphics_layout_offset, nullptr);
+    vk::DestroyPipelineLayout(m_device->handle(), graphics_layout_size, nullptr);
+    vk::DestroyPipelineLayout(m_device->handle(), compute_layout_base, nullptr);
+    vk::DestroyPipelineLayout(m_device->handle(), compute_layout_offset, nullptr);
+}
+
 TEST_F(VkLayerTest, NoBeginCommandBuffer) {
     m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "You must call vkBeginCommandBuffer() before this call to ");
 

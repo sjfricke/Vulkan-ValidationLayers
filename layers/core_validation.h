@@ -37,6 +37,7 @@ struct DrawDispatchVuid {
     const char* dynamic_state;
     const char* vertex_binding;
     const char* compatible_pipeline;
+    const char* compatible_push_constants;
     const char* render_pass_compatible;
     const char* subpass_index;
     const char* sample_location;

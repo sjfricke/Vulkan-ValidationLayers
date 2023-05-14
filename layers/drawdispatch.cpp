@@ -48,6 +48,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDraw-commandBuffer-02701",
         "VUID-vkCmdDraw-None-02720",
         "VUID-vkCmdDraw-None-02697",
+        "VUID-vkCmdDraw-None-02698",
         "VUID-vkCmdDraw-renderPass-02684",
         "VUID-vkCmdDraw-subpass-02685",
         "VUID-vkCmdDraw-sampleLocationsEnable-02689"
@@ -59,6 +60,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawIndexed-commandBuffer-02701",
         "VUID-vkCmdDrawIndexed-None-02720",
         "VUID-vkCmdDrawIndexed-None-02697",
+        "VUID-vkCmdDrawIndexed-None-02698",
         "VUID-vkCmdDrawIndexed-renderPass-02684",
         "VUID-vkCmdDrawIndexed-subpass-02685",
         "VUID-vkCmdDrawIndexed-sampleLocationsEnable-02689"
@@ -70,6 +72,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawIndirect-commandBuffer-02701",
         "VUID-vkCmdDrawIndirect-None-02720",
         "VUID-vkCmdDrawIndirect-None-02697",
+        "VUID-vkCmdDrawIndirect-None-02698",
         "VUID-vkCmdDrawIndirect-renderPass-02684",
         "VUID-vkCmdDrawIndirect-subpass-02685",
         "VUID-vkCmdDrawIndirect-sampleLocationsEnable-02689"
@@ -81,6 +84,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawIndexedIndirect-commandBuffer-02701",
         "VUID-vkCmdDrawIndexedIndirect-None-02720",
         "VUID-vkCmdDrawIndexedIndirect-None-02697",
+        "VUID-vkCmdDrawIndexedIndirect-None-02698",
         "VUID-vkCmdDrawIndexedIndirect-renderPass-02684",
         "VUID-vkCmdDrawIndexedIndirect-subpass-02685",
         "VUID-vkCmdDrawIndirect-sampleLocationsEnable-02689"
@@ -92,6 +96,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
          kVUIDUndefined, // dynamic_state
          kVUIDUndefined, // vertex_binding
          "VUID-vkCmdDispatch-None-02697",
+         "VUID-vkCmdDispatch-None-02698",
          kVUIDUndefined, // render_pass_compatible
          kVUIDUndefined, // subpass_index
          kVUIDUndefined, // sample_location
@@ -103,6 +108,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         kVUIDUndefined, // dynamic_state
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdDispatchIndirect-None-02697",
+        "VUID-vkCmdDispatchIndirect-None-02698",
         kVUIDUndefined, // render_pass_compatible
         kVUIDUndefined, // subpass_index
         kVUIDUndefined, // sample_location
@@ -114,6 +120,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawIndirectCount-commandBuffer-02701",
         "VUID-vkCmdDrawIndirectCount-None-02720",
         "VUID-vkCmdDrawIndirectCount-None-02697",
+        "VUID-vkCmdDrawIndirectCount-None-02698",
         "VUID-vkCmdDrawIndirectCount-renderPass-02684",
         "VUID-vkCmdDrawIndirectCount-subpass-02685",
         "VUID-vkCmdDrawIndirectCount-sampleLocationsEnable-02689"
@@ -125,6 +132,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawIndexedIndirectCount-commandBuffer-02701",
         "VUID-vkCmdDrawIndexedIndirectCount-None-02720",
         "VUID-vkCmdDrawIndexedIndirectCount-None-02697",
+        "VUID-vkCmdDrawIndexedIndirectCount-None-02698",
         "VUID-vkCmdDrawIndexedIndirectCount-renderPass-02684",
         "VUID-vkCmdDrawIndexedIndirectCount-subpass-02685",
         "VUID-vkCmdDrawIndexedIndirectCount-sampleLocationsEnable-02689"
@@ -136,6 +144,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdTraceRaysNV-commandBuffer-02701",
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdTraceRaysNV-None-02697",
+        "VUID-vkCmdTraceRaysNV-None-02698",
         kVUIDUndefined, // render_pass_compatible
         kVUIDUndefined, // subpass_index
         kVUIDUndefined, // sample_location
@@ -147,6 +156,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdTraceRaysKHR-commandBuffer-02701",
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdTraceRaysKHR-None-02697",
+        "VUID-vkCmdTraceRaysKHR-None-02698",
         kVUIDUndefined, // render_pass_compatible
         kVUIDUndefined, // subpass_index
         kVUIDUndefined, // sample_location
@@ -158,6 +168,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdTraceRaysIndirectKHR-commandBuffer-02701",
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdTraceRaysIndirectKHR-None-02697",
+        "VUID-vkCmdTraceRaysIndirectKHR-None-02698",
         kVUIDUndefined, // render_pass_compatible
         kVUIDUndefined, // subpass_index
         kVUIDUndefined, // sample_location
@@ -169,6 +180,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawMeshTasksNV-commandBuffer-02701",
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdDrawMeshTasksNV-None-02697",
+        "VUID-vkCmdDrawMeshTasksNV-None-02698",
         "VUID-vkCmdDrawMeshTasksNV-renderPass-02684",
         "VUID-vkCmdDrawMeshTasksNV-subpass-02685",
         "VUID-vkCmdDrawMeshTasksNV-sampleLocationsEnable-02689"
@@ -180,6 +192,7 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawMeshTasksIndirectNV-commandBuffer-02701",
          kVUIDUndefined, // vertex_binding
         "VUID-vkCmdDrawMeshTasksIndirectNV-None-02697",
+        "VUID-vkCmdDrawMeshTasksIndirectNV-None-02698",
         "VUID-vkCmdDrawMeshTasksIndirectNV-renderPass-02684",
         "VUID-vkCmdDrawMeshTasksIndirectNV-subpass-02685",
         "VUID-vkCmdDrawMeshTasksIndirectNV-sampleLocationsEnable-02689"
@@ -191,12 +204,13 @@ static const std::map<CMD_TYPE, DrawDispatchVuid> drawdispatch_vuid = {
         "VUID-vkCmdDrawMeshTasksIndirectCountNV-commandBuffer-02701",
         kVUIDUndefined, // vertex_binding
         "VUID-vkCmdDrawMeshTasksIndirectCountNV-None-02697",
+        "VUID-vkCmdDrawMeshTasksIndirectCountNV-None-02698",
         "VUID-vkCmdDrawMeshTasksIndirectCountNV-renderPass-02684",
         "VUID-vkCmdDrawMeshTasksIndirectCountNV-subpass-02685",
         "VUID-vkCmdDrawMeshTasksIndirectCountNV-sampleLocationsEnable-02689"
     }},
     // Used if invalid cmd_type is used
-    {CMD_NONE, {kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined}}
+    {CMD_NONE, {kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined, kVUIDUndefined}}
 };
 // clang-format on
 
