@@ -1,8 +1,8 @@
 /*
- * Copyright (c) 2015-2020 The Khronos Group Inc.
- * Copyright (c) 2015-2020 Valve Corporation
- * Copyright (c) 2015-2020 LunarG, Inc.
- * Copyright (c) 2015-2020 Google, Inc.
+ * Copyright (c) 2015-2021 The Khronos Group Inc.
+ * Copyright (c) 2015-2021 Valve Corporation
+ * Copyright (c) 2015-2021 LunarG, Inc.
+ * Copyright (c) 2015-2021 Google, Inc.
  * Modifications Copyright (C) 2020 Advanced Micro Devices, Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -421,6 +421,101 @@ TEST_F(VkLayerTest, CommandBufferTwoSubmits) {
     err = vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
     vk::QueueWaitIdle(m_device->m_queue);
 
+    m_errorMonitor->VerifyFound();
+}
+
+TEST_F(VkLayerTest, SecondaryCommandBufferTwoSubmits) {
+    TEST_DESCRIPTION("Test invalid use of VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT for Secondary Command Buffers");
+
+    ASSERT_NO_FATAL_FAILURE(Init());
+
+    VkCommandBuffer p_command_buffer[4]; // primary
+    VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+    command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    command_buffer_allocate_info.pNext = nullptr;
+    command_buffer_allocate_info.commandBufferCount = 4;
+    command_buffer_allocate_info.commandPool = m_commandPool->handle();
+    command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    vk::AllocateCommandBuffers(m_device->device(), &command_buffer_allocate_info, p_command_buffer);
+
+    VkCommandBuffer s_command_buffer[3]; // secondary
+    command_buffer_allocate_info.commandBufferCount = 3;
+    command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+    vk::AllocateCommandBuffers(m_device->device(), &command_buffer_allocate_info, s_command_buffer);
+
+    VkCommandBufferInheritanceInfo inheritance_info = {};
+    inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+    inheritance_info.pNext = nullptr;
+
+    VkCommandBufferBeginInfo begin_info = {};
+    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    begin_info.pInheritanceInfo = &inheritance_info;
+
+    // secondary is one time submit
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    vk::BeginCommandBuffer(s_command_buffer[0], &begin_info);
+    vk::EndCommandBuffer(s_command_buffer[0]);
+
+    begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT | VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    vk::BeginCommandBuffer(s_command_buffer[1], &begin_info);
+    vk::EndCommandBuffer(s_command_buffer[1]);
+    vk::BeginCommandBuffer(s_command_buffer[2], &begin_info);
+    vk::EndCommandBuffer(s_command_buffer[2]);
+
+    // Primary not one time
+    begin_info.flags = 0;
+
+    m_errorMonitor->ExpectSuccess();
+    vk::BeginCommandBuffer(p_command_buffer[0], &begin_info);
+    vk::CmdExecuteCommands(p_command_buffer[0], 1, &s_command_buffer[0]);
+    vk::EndCommandBuffer(p_command_buffer[0]);
+
+    // same as p_command_buffer[0]
+    vk::BeginCommandBuffer(p_command_buffer[1], &begin_info);
+    vk::CmdExecuteCommands(p_command_buffer[1], 1, &s_command_buffer[0]);
+    vk::EndCommandBuffer(p_command_buffer[1]);
+
+    vk::BeginCommandBuffer(p_command_buffer[2], &begin_info);
+    vk::CmdExecuteCommands(p_command_buffer[2], 1, &s_command_buffer[1]);
+    vk::CmdExecuteCommands(p_command_buffer[2], 1, &s_command_buffer[2]);
+    vk::EndCommandBuffer(p_command_buffer[2]);
+
+    // same as p_command_buffer[2] but with single CmdExecuteCommands
+    vk::BeginCommandBuffer(p_command_buffer[3], &begin_info);
+    vk::CmdExecuteCommands(p_command_buffer[3], 2, &s_command_buffer[1]);
+    vk::EndCommandBuffer(p_command_buffer[3]);
+    m_errorMonitor->VerifyNotFound();
+
+    // Try submitting primary with secondary called twice
+    VkSubmitInfo submit_info = {};
+    submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &p_command_buffer[2];
+    // m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkQueueSubmit-pCommandBuffers-00070");
+    // vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
+    // m_errorMonitor->VerifyFound();
+
+    submit_info.pCommandBuffers = &p_command_buffer[3];
+    // m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkQueueSubmit-pCommandBuffers-00070");
+    // vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
+    // m_errorMonitor->VerifyFound();
+
+    // Try submitting 2 primary together with same secondary
+    // submit_info.commandBufferCount = 2;
+    // submit_info.pCommandBuffers = &p_command_buffer[0];
+    // m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkQueueSubmit-pCommandBuffers-00070");
+    // vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
+    // m_errorMonitor->VerifyFound();
+
+    // Submit the one time submit secondary by itself
+    submit_info.commandBufferCount = 1;
+    submit_info.pCommandBuffers = &p_command_buffer[0];
+    vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
+    vk::QueueWaitIdle(m_device->m_queue);
+    // try submitting a different primary with same, now already submitted, secondary
+    submit_info.pCommandBuffers = &p_command_buffer[1];
+    m_errorMonitor->SetDesiredFailureMsg(kErrorBit, "VUID-vkQueueSubmit-pCommandBuffers-00070");
+    vk::QueueSubmit(m_device->m_queue, 1, &submit_info, VK_NULL_HANDLE);
     m_errorMonitor->VerifyFound();
 }
 
