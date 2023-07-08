@@ -18,8 +18,6 @@
 
 #include "convert_utils.h"
 
-#include <vector>
-
 #include "generated/vk_format_utils.h"
 #include "generated/vk_typemap_helper.h"
 
